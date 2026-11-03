@@ -19,7 +19,8 @@ import {
   Download,
   FileCheck,
   UploadCloud,
-  Upload
+  Upload,
+  Edit
 } from 'lucide-react';
 import { RoleId, User, Criterion, EvaluationPeriod } from '../../types';
 import { UserExcelImportModal } from './UserExcelImportModal';
@@ -27,6 +28,15 @@ import { CriteriaExcelImportModal } from './CriteriaExcelImportModal';
 import { exportUsersToExcel, downloadSampleExcel } from '../../utils/excelUserUtils';
 import { downloadCriteriaSampleExcel } from '../../utils/excelCriteriaUtils';
 import { isDepartmentLeaderOrDeputy } from '../../utils/evaluationRules';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -85,6 +95,7 @@ export const AdminDashboard: React.FC = () => {
 
   // Period form state
   const [showAddPeriodModal, setShowAddPeriodModal] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState<EvaluationPeriod | null>(null);
   const [periodFormData, setPeriodFormData] = useState({
     name: '',
     academicYear: '2026-2027',
@@ -172,7 +183,12 @@ export const AdminDashboard: React.FC = () => {
   const handleSavePeriod = (e: React.FormEvent) => {
     e.preventDefault();
     if (!periodFormData.name) return;
-    addPeriod(periodFormData);
+    if (editingPeriod) {
+      updatePeriod(editingPeriod.id, periodFormData);
+      setEditingPeriod(null);
+    } else {
+      addPeriod(periodFormData);
+    }
     setShowAddPeriodModal(false);
   };
 
@@ -344,11 +360,39 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Department Breakdown */}
-          <div className="bg-white rounded-xl p-5 border border-slate-200">
-            <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-xl p-5 border border-slate-200 space-y-6">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-purple-600" />
               Tiến Độ Theo Từng Tổ Chuyên Môn Trong Đợt: {currentPeriod?.name}
             </h3>
+
+            {/* Recharts Bar Chart */}
+            <div className="w-full h-72 pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={departments
+                    .filter(d => d.id !== 'dept-bgh')
+                    .map(dept => {
+                      const deptEvals = periodEvals.filter(e => e.departmentId === dept.id);
+                      return {
+                        name: dept.name.replace('Tổ ', ''),
+                        'Đã Nộp': deptEvals.filter(e => e.status === 'SUBMITTED').length,
+                        'Tổ Duyệt': deptEvals.filter(e => e.status === 'GROUP_REVIEWED').length,
+                        'BGH Duyệt': deptEvals.filter(e => e.status === 'APPROVED').length,
+                      };
+                    })}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 25 }}
+                >
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <Tooltip wrapperStyle={{ fontSize: '12px' }} />
+                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                  <Bar dataKey="Đã Nộp" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Tổ Duyệt" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="BGH Duyệt" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
@@ -1042,12 +1086,41 @@ export const AdminDashboard: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingPeriod(period);
+                        setPeriodFormData({
+                          name: period.name,
+                          academicYear: period.academicYear,
+                          semester: period.semester,
+                          startDate: period.startDate,
+                          endDate: period.endDate,
+                          description: period.description,
+                        });
+                        setShowAddPeriodModal(true);
+                      }}
+                      className="px-2.5 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors flex items-center gap-1"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      <span>Sửa</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Xác nhận xóa đợt đánh giá "${period.name}"?`)) {
+                          deletePeriod(period.id);
+                        }
+                      }}
+                      className="px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Xóa</span>
+                    </button>
                     {period.status !== 'ACTIVE' ? (
                       <button
                         onClick={() => updatePeriod(period.id, { status: 'ACTIVE' })}
                         className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
                       >
-                        Kích hoạt đợt
+                        Kích hoạt
                       </button>
                     ) : (
                       <button
@@ -1371,9 +1444,14 @@ export const AdminDashboard: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">Tạo Đợt Đánh Giá Mới</h3>
+              <h3 className="text-base font-bold text-slate-900">
+                {editingPeriod ? 'Cập Nhật Đợt Đánh Giá' : 'Tạo Đợt Đánh Giá Mới'}
+              </h3>
               <button 
-                onClick={() => setShowAddPeriodModal(false)}
+                onClick={() => {
+                  setShowAddPeriodModal(false);
+                  setEditingPeriod(null);
+                }}
                 className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-5 h-5" />
@@ -1451,7 +1529,10 @@ export const AdminDashboard: React.FC = () => {
               <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowAddPeriodModal(false)}
+                  onClick={() => {
+                    setShowAddPeriodModal(false);
+                    setEditingPeriod(null);
+                  }}
                   className="px-4 py-2 border rounded-lg text-slate-600 hover:bg-slate-100"
                 >
                   Hủy
@@ -1460,7 +1541,7 @@ export const AdminDashboard: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg"
                 >
-                  Tạo Đợt Đánh Giá
+                  {editingPeriod ? 'Cập Nhật Đợt' : 'Tạo Đợt Đánh Giá'}
                 </button>
               </div>
             </form>

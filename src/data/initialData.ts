@@ -32,6 +32,13 @@ export const INITIAL_ROLES: Role[] = [
     badgeColor: 'bg-amber-100 text-amber-700 border-amber-300',
   },
   {
+    id: 'TO_PHO',
+    name: 'Tổ Phó Chuyên Môn',
+    code: 'TO_PHO',
+    description: 'Hỗ trợ tổ trưởng thẩm định hồ sơ giáo viên trong tổ, cho điểm và tham gia quy trình đánh giá',
+    badgeColor: 'bg-orange-100 text-orange-700 border-orange-300',
+  },
+  {
     id: 'GIAO_VIEN',
     name: 'Giáo Viên',
     code: 'GIAO_VIEN',

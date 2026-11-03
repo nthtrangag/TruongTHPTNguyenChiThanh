@@ -63,6 +63,7 @@ interface EvaluationContextType {
   ) => { added: number; updated: number };
   addPeriod: (periodData: Omit<EvaluationPeriod, 'id'>) => void;
   updatePeriod: (id: string, periodData: Partial<EvaluationPeriod>) => void;
+  deletePeriod: (id: string) => void;
   addCategory: (categoryData: Omit<CriteriaCategory, 'id'>) => void;
   updateCategory: (id: string, categoryData: Partial<CriteriaCategory>) => void;
   deleteCategory: (id: string) => void;
@@ -415,6 +416,10 @@ export const EvaluationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updatePeriod = (id: string, periodData: Partial<EvaluationPeriod>) => {
     setPeriods(prev => prev.map(p => (p.id === id ? { ...p, ...periodData } : p)));
+  };
+
+  const deletePeriod = (id: string) => {
+    setPeriods(prev => prev.filter(p => p.id !== id));
   };
 
   const addCategory = (categoryData: Omit<CriteriaCategory, 'id'>) => {
@@ -921,6 +926,7 @@ export const EvaluationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         importUsersBatch,
         addPeriod,
         updatePeriod,
+        deletePeriod,
         addCategory,
         updateCategory,
         deleteCategory,

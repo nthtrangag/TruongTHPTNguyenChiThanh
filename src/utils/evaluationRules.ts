@@ -206,7 +206,7 @@ export function isDepartmentLeaderOrDeputy(user?: {
   title?: string;
 }): boolean {
   if (!user) return false;
-  if (user.roleId === 'TO_TRUONG' || user.isDepartmentHead) return true;
+  if (user.roleId === 'TO_TRUONG' || user.roleId === 'TO_PHO' || user.isDepartmentHead) return true;
   const title = (user.title || '').toLowerCase();
   return (
     title.includes('tổ trưởng') ||

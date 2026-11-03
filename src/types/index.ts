@@ -1,4 +1,4 @@
-export type RoleId = 'ADMIN' | 'BGH' | 'TO_TRUONG' | 'GIAO_VIEN' | 'NHAN_VIEN';
+export type RoleId = 'ADMIN' | 'BGH' | 'TO_TRUONG' | 'TO_PHO' | 'GIAO_VIEN' | 'NHAN_VIEN';
 
 export interface Role {
   id: RoleId;
