@@ -80,7 +80,7 @@ export const BghApprovalModal: React.FC<BghApprovalModalProps> = ({
 
     const initialRanking = evaluation.bghRanking || 'TOT';
     setRanking(initialRanking);
-  }, [evaluation.id, criteria]);
+  }, [evaluation.id]);
 
   if (!isOpen) return null;
 
