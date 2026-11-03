@@ -21,17 +21,13 @@ import {
 const AppContent: React.FC = () => {
   const { currentRole, currentUser, isAuthenticated } = useEvaluation();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [toTruongSubTab, setToTruongSubTab] = useState<'review' | 'self'>('review');
+  const [adminActiveTab, setAdminActiveTab] = useState<'dashboard' | 'evaluation' | 'department' | 'bgh'>('dashboard');
   
   // If not authenticated, require username and password login
   if (!isAuthenticated) {
     return <LoginPage />;
   }
-
-  // For Department Head role: Allow toggling between reviewing their team (Step 3) or filling their own self-evaluation (Step 2)
-  const [toTruongSubTab, setToTruongSubTab] = useState<'review' | 'self'>('review');
-
-  // For Admin role: Admin has access to ALL functions across all 4 steps
-  const [adminActiveTab, setAdminActiveTab] = useState<'dashboard' | 'evaluation' | 'department' | 'bgh'>('dashboard');
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans antialiased text-slate-800">

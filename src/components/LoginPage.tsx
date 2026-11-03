@@ -472,7 +472,9 @@ export const LoginPage: React.FC = () => {
               </p>
 
               <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                {sampleAccounts.map((acc) => (
+                {sampleAccounts
+                  .filter(acc => acc.role === 'QUẢN TRỊ VIÊN' || acc.role === 'BAN GIÁM HIỆU')
+                  .map((acc) => (
                   <div
                     key={acc.username}
                     className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 hover:border-emerald-500/60 transition-all duration-150 group"
