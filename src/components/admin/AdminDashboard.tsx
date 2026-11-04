@@ -58,7 +58,7 @@ export const AdminDashboard: React.FC = () => {
     deleteCriterion,
   } = useEvaluation();
 
-  const [activeTab, setActiveTab] = useState<'users' | 'criteria' | 'periods' | 'overview'>('overview');
+  const [activeTab, setActiveTab] = useState<'users' | 'criteria' | 'periods' | 'overview' | 'report'>('overview');
   const [criteriaRoleFilter, setCriteriaRoleFilter] = useState<'ALL' | 'GIAO_VIEN' | 'TO_TRUONG_TO_PHO' | 'Y_TE' | 'THIET_BI' | 'VAN_THU' | 'KE_TOAN' | 'TO_TRUONG_VAN_PHONG'>('ALL');
 
   // Excel import modal state
@@ -305,6 +305,17 @@ export const AdminDashboard: React.FC = () => {
           >
             <CalendarRange className="w-4 h-4" />
             Quản Lý Đợt Đánh Giá ({periods.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('report')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-all whitespace-nowrap ${
+              activeTab === 'report'
+                ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4 text-emerald-600" />
+            Báo Cáo Tổng Hợp Theo Tháng
           </button>
         </div>
       </div>
@@ -1560,6 +1571,110 @@ export const AdminDashboard: React.FC = () => {
         isOpen={showCriteriaExcelModal}
         onClose={() => setShowCriteriaExcelModal(false)}
       />
+
+      {/* Tab: Báo cáo tổng hợp */}
+      {activeTab === 'report' && (
+        <div className="bg-white rounded-xl p-6 border border-slate-200 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-emerald-600" />
+                Báo Cáo Tổng Hợp Tiến Độ Đánh Giá Toàn Trường (54 Cán Bộ Nhân Viên)
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Thống kê trực quan tỷ lệ hoàn thành đánh giá (Bản nháp, Chờ tổ trưởng, Chờ BGH, Đã phê duyệt) theo các đợt trong năm học 2026-2027.
+              </p>
+            </div>
+            <div className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shrink-0">
+              Tổng số viên chức: {users.length} người
+            </div>
+          </div>
+
+          {/* Monthly Comparison Bar Chart */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <span>Biểu đồ so sánh tiến độ đánh giá các tháng và học kỳ</span>
+            </h4>
+            <div className="w-full h-80 pt-2 bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={periods.map(p => {
+                    const pEvals = evaluations.filter(e => e.periodId === p.id);
+                    return {
+                      name: p.semester.includes('Tháng') ? p.semester : p.name.split(' ')[0],
+                      fullName: p.name,
+                      'Bản Nháp (Draft)': pEvals.filter(e => e.status === 'DRAFT').length,
+                      'Chờ Tổ Trưởng': pEvals.filter(e => e.status === 'SUBMITTED').length,
+                      'Chờ BGH': pEvals.filter(e => e.status === 'GROUP_REVIEWED').length,
+                      'Đã Phê Duyệt': pEvals.filter(e => e.status === 'APPROVED').length,
+                    };
+                  })}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 30 }}
+                >
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <Tooltip wrapperStyle={{ fontSize: '12px' }} />
+                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                  <Bar dataKey="Bản Nháp (Draft)" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Chờ Tổ Trưởng" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Chờ BGH" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Đã Phê Duyệt" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Detailed Monthly Table */}
+          <div className="space-y-3 pt-2">
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Bảng Thống Kê Chi Tiết Từng Đợt Đánh Giá
+            </h4>
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-700 border-b border-slate-200">
+                    <th className="py-3 px-4 font-semibold">Tên Đợt Đánh Giá</th>
+                    <th className="py-3 px-4 font-semibold">Năm Học</th>
+                    <th className="py-3 px-4 font-semibold text-center">Bản Nháp (DRAFT)</th>
+                    <th className="py-3 px-4 font-semibold text-center">Chờ Tổ Trưởng</th>
+                    <th className="py-3 px-4 font-semibold text-center">Chờ BGH</th>
+                    <th className="py-3 px-4 font-semibold text-center">Đã Phê Duyệt</th>
+                    <th className="py-3 px-4 font-semibold text-center">Tổng Hồ Sơ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {periods.map(p => {
+                    const pEvals = evaluations.filter(e => e.periodId === p.id);
+                    const draft = pEvals.filter(e => e.status === 'DRAFT').length;
+                    const sub = pEvals.filter(e => e.status === 'SUBMITTED').length;
+                    const grp = pEvals.filter(e => e.status === 'GROUP_REVIEWED').length;
+                    const app = pEvals.filter(e => e.status === 'APPROVED').length;
+                    const total = pEvals.length;
+
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4 font-bold text-slate-900">{p.name}</td>
+                        <td className="py-3 px-4 text-slate-600">{p.academicYear}</td>
+                        <td className="py-3 px-4 text-center font-semibold text-slate-600">{draft}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">{sub}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold">{grp}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">{app}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center font-black text-slate-800">{total}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

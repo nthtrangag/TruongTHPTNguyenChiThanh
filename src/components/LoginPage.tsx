@@ -97,7 +97,7 @@ export const LoginPage: React.FC = () => {
     {
       id: 'u-bgh-1',
       title: 'Bước 4: Ban Giám Hiệu (Hiệu trưởng)',
-      name: 'PGS.TS Nguyễn Văn An',
+      name: 'Trần Kiên Cường',
       username: 'hieutruong',
       pass: '123456',
       role: 'BAN GIÁM HIỆU',
